@@ -3,7 +3,9 @@
 一个原生、轻量的 Windows 桌面系统监控 HUD。程序把一块半透明信息面板挂在
 **桌面壁纸层之上、桌面图标之下**，按 `Win+D` 不会消失，鼠标点击完全穿透。
 
-![AuraUI 运行实拍：半透明面板嵌在桌面壁纸层上，圆角、进度条、按内容自适应宽度](docs/images/hud_on_desktop.png)
+<p align="center">
+  <img src="docs/images/hud_on_desktop.png" alt="AuraUI 运行实拍：半透明面板嵌在桌面壁纸层上，圆角、进度条、按内容自适应宽度">
+</p>
 
 **主要特性**
 
@@ -103,7 +105,9 @@ Common Controls v6；DPI 感知经 `SetProcessDpiAwarenessContext` 运行时设�
 * 设置窗口：改动实时预览到 HUD；"取消"不落盘、"应用"生效、"确定"生效并关闭；
   宽度不足时自动抬高并弹窗说明（文字宽度护栏）。
 
-![设置窗口：常规 / 显示 / 外观 / 监控项 / 帮助，改动实时预览到 HUD](docs/images/settings.png)
+<p align="center">
+  <img src="docs/images/settings.png" alt="设置窗口：常规 / 显示 / 外观 / 监控项 / 帮助，改动实时预览到 HUD">
+</p>
 
 ---
 

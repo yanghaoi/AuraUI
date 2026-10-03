@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(AuraUI VERSION 0.2.1 LANGUAGES CXX RC)
+project(AuraUI VERSION 0.2.2 LANGUAGES CXX RC)
 
 # ---------------------------------------------------------------------------
 # AuraUI - native Win32 desktop HUD (C++20 / Direct2D / DirectWrite)

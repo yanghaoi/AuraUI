@@ -15,11 +15,11 @@
 
 #define AURAUI_VER_MAJOR 0
 #define AURAUI_VER_MINOR 2
-#define AURAUI_VER_PATCH 1
+#define AURAUI_VER_PATCH 2
 #define AURAUI_VER_BUILD 0
 
 // "major.minor.patch.build" for the VERSIONINFO resource.
-#define AURAUI_VER_STRING "0.2.1.0"
+#define AURAUI_VER_STRING "0.2.2.0"
 
 #ifndef RC_INVOKED
 #include <string>

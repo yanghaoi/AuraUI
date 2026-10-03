@@ -1,0 +1,20 @@
+# Normalize line endings: LF in the repository, native on checkout.
+* text=auto
+
+# Sources are UTF-8 (app.rc declares code_page 65001) - never let git
+# guess an encoding or strip the BOM-less UTF-8.
+*.cpp text
+*.h text
+*.rc text
+*.manifest text
+*.py text
+*.md text
+*.txt text
+*.cmake text
+CMakeLists.txt text
+
+# Binary assets - never normalize.
+*.ico binary
+*.png binary
+*.bmp binary
+*.exe binary

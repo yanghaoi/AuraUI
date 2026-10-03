@@ -1,0 +1,30 @@
+# build outputs
+build/*
+
+# build products / link intermediates - never commit these
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.res
+
+# runtime / driver artifacts
+NVIDIA Corporation/
+*.zip
+*.log
+Thumbs.db
+Desktop.ini
+
+# third-party agent tool cache
+.workbuddy-ai/
+
+# working scratch (screenshots etc., user-cleaned)
+temp/
+
+# pending deletion (user review, see DELETE/)
+DELETE/

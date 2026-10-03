@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <!-- Version note: keep in sync with core/version.h (single source). The
+       loader reads this block, windres cannot stringify into it. -->
+  <assemblyIdentity type="win32" name="AuraUI" version="0.2.1.0" processorArchitecture="*"/>
+  <description>AuraUI - Native Windows Desktop System Monitor HUD</description>
+
+  <!-- This manifest lives at resource id 2 (see src/main.cpp for why id 1
+       clashes with MinGW's default manifest) and is activated at runtime via
+       ActivateActCtx. That activation covers SxS dependency resolution (the
+       Common-Controls v6 binding below - the whole point of this file), but
+       NOT the loader-time settings: <windowsSettings> (dpiAwareness,
+       longPathAware) and <compatibility> below are INERT at id 2. DPI
+       awareness is therefore set through the API at startup
+       (TrySetPerMonitorV2); the remaining inert entries are kept for
+       completeness should the manifest ever move to id 1.
+
+       activeCodePage UTF-8 is deliberately ABSENT: profile/INI APIs truncate
+       multi-byte values under ACP 65001 (measured: L"微软雅黑" writes only
+       "微软"), which would corrupt config.ini. The config stays on the
+       system code page (round-trip verified on CP936). -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity type="win32"
+                        name="Microsoft.Windows.Common-Controls"
+                        version="6.0.0.0"
+                        processorArchitecture="*"
+                        publicKeyToken="6595b64144ccf1df"
+                        language="*"/>
+    </dependentAssembly>
+  </dependency>
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2,PerMonitor,System</dpiAwareness>
+      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+    </windowsSettings>
+  </application>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 / 11 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      <!-- Windows 8.1 -->
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+      <!-- Windows 8 -->
+      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
+    </application>
+  </compatibility>
+</assembly>

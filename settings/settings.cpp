@@ -639,7 +639,7 @@ void SettingsWindow::WriteControls() {
     setText(ids::EdtH, FmtInt(draft_.height));
 
     if (HWND h = Item(ids::SldOpacity)) {
-        ::SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, 255));
+        ::SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, Config::kOpacityMax));
         ::SendMessageW(h, TBM_SETPOS, TRUE, draft_.opacity);
     }
 
@@ -663,9 +663,9 @@ void SettingsWindow::WriteControls() {
     setCheck(ids::ChkBars, draft_.showBars);
 
     if (HWND h = Item(ids::SldRadius)) {
-        // 0..32 matches Config::Sanitize's design bound (the corner arc must
-        // not reach the text column; see the Sanitize comment).
-        ::SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, 32));
+        // 0..kCornerRadiusMax matches Config::Sanitize's design bound (the
+        // corner arc must not reach the text column; see the Sanitize comment).
+        ::SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, Config::kCornerRadiusMax));
         ::SendMessageW(h, TBM_SETPOS, TRUE, draft_.cornerRadius);
     }
 

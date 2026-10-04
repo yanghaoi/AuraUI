@@ -14,6 +14,13 @@ namespace auraui {
 // ---------------------------------------------------------------------------
 
 struct Config {
+    // Design bounds shared by Config::Sanitize and the settings UI (slider
+    // ranges, combo presets). Declared here so the clamping rules and the
+    // controls that expose them cannot drift apart.
+    static constexpr int kCornerRadiusMax = 32;  // arc must stay clear of the text column
+    static constexpr int kPaddingMax      = 64;
+    static constexpr int kOpacityMax      = 255;
+
     // [General]
     bool autoStart   = false;
     int  refreshMs   = 1000;

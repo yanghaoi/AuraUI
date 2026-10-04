@@ -287,7 +287,25 @@ unsigned CpuCores() { return Topology().first; }
 unsigned CpuThreads() { return Topology().second; }
 
 const std::wstring& RamDesc(unsigned long long totalPhysBytes) {
-    static const std::wstring desc = BuildRamDesc(totalPhysBytes);
+    // The description (capacity from the OS + type/clock from SMBIOS) is
+    // hardware identity: it cannot change while the process runs. It is built
+    // once on the first call - which MUST be the sampler's, after
+    // memory_.Sample() filled s.memory.total (an earlier call with 0 would
+    // freeze an empty/wrong GB figure forever). Cache the argument the first
+    // time and assert consistency afterwards, so a new call site that
+    // violates that ordering fails loudly instead of silently.
+    static unsigned long long          seenBytes = 0;
+    static bool                        primed    = false;
+    static const std::wstring          desc      = BuildRamDesc(totalPhysBytes);
+    if (!primed) {
+        seenBytes = totalPhysBytes;
+        primed    = true;
+    } else if (totalPhysBytes != seenBytes) {
+        log::Error(L"RamDesc called with a different capacity than the first "
+                   L"call (" + std::to_wstring(totalPhysBytes) + L" != " +
+                   std::to_wstring(seenBytes) + L"); ignoring (hardware cannot "
+                   L"change at runtime - check the new call site's ordering).");
+    }
     return desc;
 }
 

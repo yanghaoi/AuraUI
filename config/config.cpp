@@ -109,25 +109,25 @@ void Config::Sanitize() {
     if (height > 4000) height = 4000;
 
     if (opacity < 0) opacity = 0;
-    if (opacity > 255) opacity = 255;
+    if (opacity > kOpacityMax) opacity = kOpacityMax;
 
     if (fontSize < 6.0f) fontSize = 6.0f;
     if (fontSize > 96.0f) fontSize = 96.0f;
 
     if (fontFamily.empty()) fontFamily = L"Segoe UI";
 
-    // 32 is a design bound, not an arbitrary cap: the corner arc must stay
-    // clear of the text column (padding-left 14px). Measured on an r=64
-    // render, the arc reaches x≈17.5 at the title row while glyphs start at
-    // x=14 - text pokes outside the panel fill. The corner cut-outs also
+    // kCornerRadiusMax is a design bound, not an arbitrary cap: the corner arc
+    // must stay clear of the text column (padding-left 14px). Measured on an
+    // r=64 render, the arc reaches x≈17.5 at the title row while glyphs start
+    // at x=14 - text pokes outside the panel fill. The corner cut-outs also
     // expose the underlay crop directly against the real desktop; their area
     // grows quadratically with r and past ~32 the approximation seam becomes
     // visible ("translucent corner" artifacts).
     if (cornerRadius < 0) cornerRadius = 0;
-    if (cornerRadius > 32) cornerRadius = 32;
+    if (cornerRadius > kCornerRadiusMax) cornerRadius = kCornerRadiusMax;
 
     if (padding < 0) padding = 0;
-    if (padding > 64) padding = 64;
+    if (padding > kPaddingMax) padding = kPaddingMax;
 
     bgColor &= 0xFFFFFFu;
     accentColor &= 0xFFFFFFu;

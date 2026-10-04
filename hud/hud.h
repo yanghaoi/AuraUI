@@ -199,8 +199,14 @@ private:
                                              bool trailing);
     static float MeasureTextWidth(IDWriteFactory* dw, IDWriteTextFormat* fmt,
                                   const std::wstring& txt);
-    // Mirror of RenderToTarget's zone split: minimum width so no label or
-    // right-aligned value is clipped on any row.
+    // The ONE implementation of the right-aligned value-zone width:
+    // max(zone floor, measured text + pad). ContentMinWidth (panel width
+    // floor) and RenderToTarget (drawing) both call this, so the zone split
+    // can never drift between "measured" and "drawn".
+    static float ValueZoneWidth(IDWriteFactory* dw, IDWriteTextFormat* fmtValueR,
+                                const std::wstring& value, float floorW,
+                                float pad, float s);
+    // Minimum width so no label or right-aligned value is clipped on any row.
     static float ContentMinWidth(const std::vector<Item>& items, IDWriteFactory* dw,
                                  IDWriteTextFormat* fmtTitle, IDWriteTextFormat* fmtLabel,
                                  IDWriteTextFormat* fmtValueR, float s, float pad);

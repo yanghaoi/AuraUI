@@ -503,10 +503,17 @@ float Hud::MeasureTextWidth(IDWriteFactory* dw, IDWriteTextFormat* fmt,
     return m.widthIncludingTrailingWhitespace;
 }
 
-// Mirror of RenderToTarget's zone split: the label zone is [pad, width-valueW]
-// and the value zone [width-valueW, width-pad], so a row fits when
-//   width >= pad + labelW + gap + valueW + pad.
-// The value part must match valueZoneW there: max(zone floor, measured+pad).
+// The single implementation of the value-zone split: the label zone is
+// [pad, width-valueW] and the value zone [width-valueW, width-pad], so a row
+// fits when width >= pad + labelW + gap + valueW + pad. The value part is
+// max(zone floor, measured text + pad) -- one function shared by the panel
+// width floor (ContentMinWidth) and the drawing path (RenderToTarget).
+float Hud::ValueZoneWidth(IDWriteFactory* dw, IDWriteTextFormat* fmtValueR,
+                          const std::wstring& value, float floorW,
+                          float pad, float s) {
+    return std::max(floorW, MeasureTextWidth(dw, fmtValueR, value) + pad + 2.0f * s);
+}
+
 float Hud::ContentMinWidth(const std::vector<Item>& items, IDWriteFactory* dw,
                            IDWriteTextFormat* fmtTitle, IDWriteTextFormat* fmtLabel,
                            IDWriteTextFormat* fmtValueR, float s, float pad) {
@@ -530,7 +537,7 @@ float Hud::ContentMinWidth(const std::vector<Item>& items, IDWriteFactory* dw,
             default: {
                 const float floorW = (it.valueW > 0.0f ? it.valueW : 56.0f) * s;
                 const float valueW =
-                    std::max(floorW, MeasureTextWidth(dw, fmtValueR, it.value) + pad + 2.0f * s);
+                    ValueZoneWidth(dw, fmtValueR, it.value, floorW, pad, s);
                 w = pad + MeasureTextWidth(dw, fmtLabel, it.label) + gap + valueW + pad;
                 break;
             }
@@ -674,11 +681,8 @@ void Hud::RenderToTarget(ID2D1RenderTarget* rt, const std::vector<Item>& items, 
         // 140px VRAM zone showed "612.4 MB / 12.0 GB" as ".4 MB / 12.0 GB").
         // The zone rect is [width - w, width - pad], so w must cover the
         // measured text PLUS the pad; never shrink below the row's floor.
-        // ContentMinWidth mirrors this math for the panel width floor.
-        auto valueZoneW = [&](const std::wstring& txt, float floorW) -> float {
-            return std::max(floorW,
-                            MeasureTextWidth(dwriteFactory_, fmtValueR_, txt) + pad + 2.0f * s);
-        };
+        // The math lives in ValueZoneWidth - the same function the panel
+        // width floor (ContentMinWidth) uses.
 
         for (const Item& it : items) {
             switch (it.kind) {
@@ -698,9 +702,10 @@ void Hud::RenderToTarget(ID2D1RenderTarget* rt, const std::vector<Item>& items, 
                     // identity ("CPU  Intel(R) Core(TM) i5-6500 · 4C8T"), which
                     // is far longer than the right-aligned percentage. Rows
                     // with wider values (VRAM "11.3 GB / 12.0 GB") carry their
-                    // own zone floor; valueZoneW grows it to the real text.
-                    const float valueW =
-                        valueZoneW(it.value, (it.valueW > 0.0f ? it.valueW : 56.0f) * s);
+                    // own zone floor; ValueZoneWidth grows it to the real text.
+                    const float valueW = ValueZoneWidth(
+                        dwriteFactory_, fmtValueR_, it.value,
+                        (it.valueW > 0.0f ? it.valueW : 56.0f) * s, pad, s);
                     const D2D1_RECT_F lr = D2D1::RectF(pad, it.y, width - valueW, it.y + lineH);
                     const D2D1_RECT_F vr = D2D1::RectF(width - valueW, it.y, right, it.y + lineH);
                     drawText(it.label, fmtLabel_, lr, theme.label);
@@ -744,7 +749,9 @@ void Hud::RenderToTarget(ID2D1RenderTarget* rt, const std::vector<Item>& items, 
                     // Same zone split as Meter rows - the only difference is
                     // the value format's weight in older builds; a uniform
                     // floor keeps ContentMinWidth's math valid for both.
-                    const float valueW = valueZoneW(it.value, (it.valueW > 0.0f ? it.valueW : 56.0f) * s);
+                    const float valueW = ValueZoneWidth(
+                        dwriteFactory_, fmtValueR_, it.value,
+                        (it.valueW > 0.0f ? it.valueW : 56.0f) * s, pad, s);
                     const D2D1_RECT_F lr = D2D1::RectF(pad, it.y, width - valueW, it.y + lineH);
                     const D2D1_RECT_F vr = D2D1::RectF(width - valueW, it.y, right, it.y + lineH);
                     drawText(it.label, fmtLabel_, lr, theme.label);

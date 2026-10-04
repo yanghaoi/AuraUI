@@ -2,7 +2,7 @@
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <!-- Version note: keep in sync with core/version.h (single source). The
        loader reads this block, windres cannot stringify into it. -->
-  <assemblyIdentity type="win32" name="AuraUI" version="0.2.2.0" processorArchitecture="*"/>
+  <assemblyIdentity type="win32" name="AuraUI" version="0.2.3.0" processorArchitecture="*"/>
   <description>AuraUI - Native Windows Desktop System Monitor HUD</description>
 
   <!-- This manifest lives at resource id 2 (see src/main.cpp for why id 1

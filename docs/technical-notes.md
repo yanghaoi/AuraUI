@@ -431,14 +431,15 @@ windres 不解析 ICO 内部结构、原样嵌入，于是 exe 里有了**无法
 裁成 ".4 MB / 12.0 GB"）。标签区（CPU 品牌行等）同样受宽度约束。魔法数追不胜追，
 最终方案是三层测量保护（2026-09-24）：
 
-1. **值区域实测宽**（`RenderToTarget` 的 `valueZoneW`）：
+1. **值区域宽**（`Hud::ValueZoneWidth`，唯一实现）：
    `max(行下限×s, 实测宽 + pad + 2s)`。区域矩形是 `[width-w, width-pad]`，
    因此 `w` 必须覆盖文本**加** pad——第一版修复漏加 pad 仍被边际裁切。
+   测宽端与绘制端都调这一个静态函数（见下方"历史"）。
 2. **内容最小宽**（`Hud::ContentMinWidth`）：逐行算
-   `pad + labelW + gap + valueW + pad`（Title/NET 行按整行文本），面板宽 =
-   `max(80, 配置宽, widthFloor_)`。`widthFloor_` **增长即时、收缩需连续 5 帧保持
-   更小**——数值逐秒变长变短，无迟滞的地板会让面板呼吸并反复重裁壁纸垫底；
-   `ApplyConfig` 重置地板。`DumpToBmp` 一次性渲染，直接应用无迟滞。
+   `pad + labelW + gap + ValueZoneWidth(…) + pad`（Title/NET 行按整行文本），
+   面板宽 = `max(80, 配置宽, widthFloor_)`。`widthFloor_` **增长即时、收缩需连续
+   5 帧保持更小**——数值逐秒变长变短，无迟滞的地板会让面板呼吸并反复重裁壁纸
+   垫底；`ApplyConfig` 重置地板。`DumpToBmp` 一次性渲染，直接应用无迟滞。
 3. **设置护栏**（`SettingsWindow::EnsureMinWidth`）：`Hud::RequiredPanelWidth`
    用与渲染端同一套 `BuildItemsFor` + `ContentMinWidth` + 字体构造（`MakeTextFormat`），
    按草稿配置、**目标显示器的实际 DPI**（`MonitorIndexDpi`，`GetDpiForMonitor`
@@ -447,6 +448,14 @@ windres 不解析 ICO 内部结构、原样嵌入，于是 exe 里有了**无法
 
 LAN 行（Text kind）的值区域下限与 Meter 行统一（56px×s），不再用半面板宽，
 测量数学对所有行一致。
+
+> **历史：v0.2.3 收敛为单实现（`c651aeb`）**。第 1、2 项原本是同一公式的两份副本
+> ——`ContentMinWidth` 里一份、`RenderToTarget` 的 `valueZoneW` lambda 里一份，
+> 只靠注释互相同步。上文提到的漏 pad、地板呼吸等 bug 都源自这份漂移。现在抽出
+> `Hud::ValueZoneWidth`，测宽（`ContentMinWidth`）与绘制（`RenderToTarget` 的
+> Meter/Text 行）都调用它，公式只写一遍。纯重构：`--dump` 修改前后逐像素对比，
+> 差异全部落在 CPU 占比、网速等实时数据上，静态结构零差异。
+> 设置端的 `Hud::RequiredPanelWidth` 走的是同一条 `ContentMinWidth` 路径。
 
 **测量一致性陷阱**：比较字符串宽度必须在**同一 DPI 感知环境**下进行。独立探针
 进程若不声明 DPI 感知，`LOGPIXELSX`/DWrite 都被虚拟化到 96，与应用进程
@@ -530,6 +539,32 @@ Win10 19045 上实测：**profile API 按原始 ANSI 字节读文件，完全找
   `OutputDebugString`（`log::Warn` 会递归死锁）。
 * 被后台线程 `PostMessage` 的 HWND 要在销毁路径上提前解绑（窗口句柄可能
   被复用）；共享状态（此处 `notifyWnd_`）用同一把互斥量保护读写。
+
+### 审计清单收尾：v0.2.2 的三处修复
+
+同一轮审计的问题清单（13.x 编号）里，最后三处在有编译器的机器上复核后落地，
+随 **v0.2.2** 发布（`6d390bd`）：
+
+* **垫底解码尺寸上界**：`desktop::DecodeRegionToBGRA` 与 `Hud::DecodeUnderlayCrop`
+  原本只拒 `iw == 0 || ih == 0`。壁纸文件损坏或尺寸异常时，下游会按
+  `dstW * dstH * 4` 直接分配——两处统一加 `iw * ih > 8192u * 8192u` 判失败
+  （`E_INVALIDARG`），走既有的降级路径（纯色垫底 / 重试）。这是镜像实现，
+  两处必须同步改。
+* **`Sampler::Stop` 提前返回漏释放**：worker 未启动时旧代码在锁内 `return`，
+  跳过末尾的 `gpu_.Shutdown()`，把释放留给析构——`Stop()` 单独调用即成为不完整
+  拆解。改为锁内只置停止标志，`Shutdown()` 无条件执行（本身幂等，见
+  `GpuMonitor::Shutdown`）。
+* **`--dump` 相对路径静默跑偏**：`wWinMain` 在**解析命令行之前**就把工作目录切到
+  `%APPDATA%\AuraUI`（挡住 NVIDIA 驱动往启动目录丢 `umdlogs`），于是用户给的
+  相对路径被写到 APPDATA 且仍返回 0——不是失败，是静默写错地方。修复：切换前用
+  `GetCurrentDirectoryW` 存下 `launchDir`，解析后若 `--dump` 路径非绝对
+  （盘符 / UNC / 根斜杠，`IsAbsolutePath`）则前置 `launchDir`。
+
+清单其余项由 `c651aeb`（13.3 值区宽度重构，见第 9 节）与 `433f17f`（13.2 RamDesc
+契约告警、13.5 设计上界收敛）收尾，`80f2ab5` 统一版本号为 v0.2.3——至此清单全部闭环。
+
+**教训：切换工作目录是进程级全局副作用，入口处就要把路径分成两类记账——程序自己的
+路径一律绝对，用户给的路径必须相对"启动目录"解析，而不是相对"当前目录"。**
 
 ---
 
